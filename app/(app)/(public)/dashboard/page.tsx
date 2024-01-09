@@ -7,20 +7,21 @@ import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
+import jwt_decode from 'jwt-decode'; // Import a JWT decoding library
+import { get } from 'http';
+
 
 export default function Page() {
   const router = useRouter();
   const [businesses, setBusinesses] = useState([]);
   const [businessesName, setBusinessesrName] = useState('');
   const data = useSelector((state: any) => state);
-  const [zob, setZob] = useState([]);
+  const [order, setOrder] = useState([]);
 
   const handleDeleteOrder = async (orderId) => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseKey);
-    console.log(orderId);
-    console.log("|");
     
     try {
       const { data, error } = await supabase
@@ -78,7 +79,7 @@ export default function Page() {
         console.log('Error fetching businesses:', error);
       } else {
         console.log('Businesses data:', businessData);
-        setZob(businessData);
+        setOrder(businessData);
       }
     } catch (error) {
       console.log('Error fetching businesses:', error);
@@ -97,7 +98,7 @@ export default function Page() {
         console.log('Error fetching businesses:', error);
       } else {
         console.log('Businesses data:', businessData);
-        setZob(businessData);
+        setOrder(businessData);
 
 
       }
@@ -106,11 +107,50 @@ export default function Page() {
     }
   };
   useEffect(() => {
-    console.log("user data", data);
-    if (data.email === undefined) {
-      router.push('/login');
-      fetchBusinesses();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const getUserById = async (id) => {
+      const { data, error } = await supabase.from('users').select('user_id, name')
+
+// console.log(data)
+// Still => { id: 'd0714948', name: 'Jane' }
+
+      if (error) {
+        console.log(error);
+        return null;
+      }
+      return data;
     }
+    function parseJwt (token) {
+      var base64Url = token.split('.')[1];
+      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+  
+      return JSON.parse(jsonPayload);
+  }
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      
+      if (parts.length === 2) {
+        return parts.pop().split(';').shift();
+      }
+    };
+
+    const token = getCookie('authToken');
+    if (token) {
+      const decodedToken = parseJwt(token);
+      const userid = decodedToken.sub;
+      console.log("userid", userid);
+        const user = getUserById(userid);
+        console.log("user --> ", user);
+    } else {
+      router.push('/login');
+    }
+    fetchBusinesses();
   }, [])
   return (
     <div className='h-screen w-full text-white bg-gray-900 pt-3 '>
@@ -147,8 +187,7 @@ export default function Page() {
         </div>
       </div>
       <div className="flex flex-col items-center justify-center text-gray-100 mt-5">
-        {zob.map((order) => (
-          console.log("order 1 ", order),
+        {order.map((order) => (
           <div key={order.id} className="mb-4">
             <p>Order Name: {order.name}</p>
             <p>Created At: {order.created_at}</p>

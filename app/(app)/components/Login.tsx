@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { useDispatch } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSelector } from "react-redux";
@@ -15,7 +14,6 @@ export default function Login() {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const dispatch = useDispatch();
     const router = useRouter();
 
     const login = async () => {
@@ -29,7 +27,6 @@ export default function Login() {
             toast.error("Invalid login credentials");
         } else {
             const authToken = data.session.access_token;
-            dispatch({ type: "setTheme", payload: username });
             document.cookie = `authToken=${authToken}; expires=Fri, 31 Dec 2024 23:59:59 GMT; path=/`;
             router.push('/dashboard');
         }
