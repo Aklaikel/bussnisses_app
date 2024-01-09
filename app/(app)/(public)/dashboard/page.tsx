@@ -19,12 +19,13 @@ export default function Page() {
   const [order, setOrder] = useState([]);
 
   const handleDeleteOrder = async (orderId) => {
+    console.log("orderId", orderId);
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     try {
-      const { data, error } = await supabase
+      const {error } = await supabase
         .from('businesses')
         .delete()
         .eq('id', orderId);
@@ -61,7 +62,7 @@ export default function Page() {
     try {
       const { data: createdOrder, error } = await supabase
         .from('businesses')
-        .upsert(newOrder, { returning: 'minimal' });
+        .upsert(newOrder);
 
       if (error) {
         toast.error('Error inserting order:', error.message);
@@ -153,7 +154,7 @@ export default function Page() {
     fetchBusinesses();
   }, [])
   return (
-    <div className='h-screen w-full text-white bg-gray-900 pt-3 '>
+    <div className='h-full w-full text-white bg-gray-900 pt-3'>
       <h1 className="text-4xl text-center font-bold mb-8">
         Businesses
       </h1>
@@ -188,6 +189,7 @@ export default function Page() {
       </div>
       <div className="flex flex-col items-center justify-center text-gray-100 mt-5">
         {order.map((order) => (
+          console.log("order", order),
           <div key={order.id} className="mb-4">
             <p>Order Name: {order.name}</p>
             <p>Created At: {order.created_at}</p>
@@ -195,9 +197,11 @@ export default function Page() {
             <button
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mt-2"
               type="button"
-              onClick={() => handleDeleteOrder(order.id)}
-            >
+              onClick={() => handleDeleteOrder(order.id)} >
               Delete
+            </button>
+            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mt-2" type="button">
+              Edit
             </button>
           </div>
         ))}
